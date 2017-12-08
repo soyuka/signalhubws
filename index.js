@@ -22,7 +22,7 @@ function SignalhubWs (app, urls) {
 
     this.sockets.push(socket)
 
-    socket.on('open', () => {
+    socket.addEventListener('open', () => {
       if (++countOpen === urls.length) {
         this.opened = true
         this.emit('open')
@@ -32,7 +32,7 @@ function SignalhubWs (app, urls) {
       }
     })
 
-    socket.on('message', (message) => {
+    socket.addEventListener('message', (message) => {
       this.onMessage(message)
     })
   }
@@ -127,7 +127,7 @@ SignalhubWs.prototype.close = function (cb) {
 
   var closed = 0
   this.sockets.forEach((socket) => {
-    socket.once('close', () => {
+    socket.addEventListener('close', () => {
       if (++closed === len) {
         this.emit('close')
       }
