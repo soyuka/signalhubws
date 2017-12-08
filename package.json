@@ -13,6 +13,7 @@
   "dependencies": {
     "events": "^1.1.1",
     "inherits": "^2.0.3",
+    "minimist": "^1.2.0",
     "signalhub": "^4.9.0",
     "tape": "^4.8.0",
     "through2": "^2.0.3",
