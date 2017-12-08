@@ -1,13 +1,12 @@
 var WebSocketServer = require('uws').Server
 
-function server(args, cb) {
+function server (args, cb) {
   var wss = new WebSocketServer(args)
 
-  wss.on('connection', function(ws) {
-      ws.on('message', (data) => {
-        console.log('data', data)
-          wss.broadcast(data)
-      });
+  wss.on('connection', function (ws) {
+    ws.on('message', (data) => {
+      wss.broadcast(data)
+    })
   })
   cb(wss)
 }

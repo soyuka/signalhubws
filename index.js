@@ -1,13 +1,13 @@
 var events = require('events')
-var WebSocket = require('uws');
+var WebSocket = require('uws')
 var through2 = require('through2')
 var inherits = require('inherits')
 
-function MonClient(app, urls) {
+function SignalhubWs (app, urls) {
   this.sockets = []
-  this.channels = new Map
-  var countOpen = 0
+  this.channels = new Map()
   this.opened = false
+  var countOpen = 0
 
   // manage URLs
   urls = urls.map(function (url) {
@@ -32,13 +32,13 @@ function MonClient(app, urls) {
 
     socket.on('message', (message) => {
       this.onMessage(message)
-    });
+    })
   }
 }
 
-inherits(MonClient, events.EventEmitter)
+inherits(SignalhubWs, events.EventEmitter)
 
-MonClient.prototype.subscribe = function(channel) {
+SignalhubWs.prototype.subscribe = function (channel) {
   if (this.closed) {
     throw new Error('Cannot subscribe after close')
   }
@@ -51,7 +51,7 @@ MonClient.prototype.subscribe = function(channel) {
   // this.channels[channel] = through2.obj()
   this.channels.set(channel, through2.obj())
 
-  this.channels.get(channel).on('close', function() {
+  this.channels.get(channel).on('close', function () {
     this.channels.remove(channel)
   })
   if (this.opened) {
@@ -62,10 +62,9 @@ MonClient.prototype.subscribe = function(channel) {
     })
   }
   return this.channels.get(channel)
-
 }
 
-MonClient.prototype.broadcast = function(channel, message, cb) {
+SignalhubWs.prototype.broadcast = function (channel, message, cb) {
   if (this.closed) throw new Error('Cannot broadcast after close')
 
   var data = {
@@ -73,7 +72,6 @@ MonClient.prototype.broadcast = function(channel, message, cb) {
     message: message
   }
   var pending = this.sockets.length
-  var errors = 0
 
   this.sockets.forEach((socket) => {
     socket.send(JSON.stringify(data), (err) => {
@@ -86,16 +84,16 @@ MonClient.prototype.broadcast = function(channel, message, cb) {
       }
 
       cb && cb()
-    });
+    })
   })
 }
 
-MonClient.prototype.onMessage = function(message) {
+SignalhubWs.prototype.onMessage = function (message) {
   message = JSON.parse(message)
 
   for (let key of this.channels.keys()) {
     if (Array.isArray(key)) {
-      for (var i=0; i<key.length; i++) {
+      for (var i = 0; i < key.length; i++) {
         if (key[i] === message.channel) {
           this.channels.get(key).write(message.message)
         }
@@ -109,11 +107,11 @@ MonClient.prototype.onMessage = function(message) {
   }
 }
 
-MonClient.prototype.close = function (cb) {
+SignalhubWs.prototype.close = function (cb) {
   if (this.closed) return
   this.closed = true
 
-  for(let channel of this.channels.values()) {
+  for (let channel of this.channels.values()) {
     channel.end()
   }
 
@@ -138,6 +136,6 @@ MonClient.prototype.close = function (cb) {
   })
 }
 
-module.exports = function(app, urls) {
-  return new MonClient(app, urls)
+module.exports = function (app, urls) {
+  return new SignalhubWs(app, urls)
 }

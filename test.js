@@ -15,7 +15,6 @@ server({port: 3002, path: 'app'}, (wss) => {
     })
   })
 
-
   tape('subscribe with trailing /', function (t) {
     var c = client('app', [`localhost:3002`])
 
@@ -86,42 +85,4 @@ server({port: 3002, path: 'app'}, (wss) => {
     t.ok(true)
     t.end()
   })
-
 })
-
-
-  // tape('subscribe two apps', function (t) {
-  //   t.plan(2)
-
-  //   var missing = 2
-  //   var c1 = client('app', ['localhost:9000'])
-
-  //   c1.subscribe('hello').on('data', function (message) {
-  //     t.same(message, {hello: 'world'})
-  //     done()
-  //   }).on('open', function () {
-  //     c1.broadcast('hello', {hello: 'world'})
-  //   })
-
-  //   var c2 = client('app2', ['localhost:9000'])
-
-  //   c2.subscribe('hello').on('data', function (message) {
-  //     t.same(message, {hello: 'world'})
-  //     done()
-  //   }).on('open', function () {
-  //     c2.broadcast('hello', {hello: 'world'})
-  //   })
-
-  //   function done () {
-  //     if (--missing) return
-  //     setTimeout(function () {
-  //       c1.close()
-  //       c2.close()
-  //       t.end()
-  //     }, 100)
-  //   }
-  // })
-
-
-
-
