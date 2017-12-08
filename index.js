@@ -1,5 +1,4 @@
 var events = require('events')
-var WebSocket = require('uws')
 var through2 = require('through2')
 var inherits = require('inherits')
 
@@ -10,13 +9,16 @@ function SignalhubWs (app, urls) {
   var countOpen = 0
 
   // manage URLs
+  if (!Array.isArray(urls)) {
+    urls = [urls]
+  }
   urls = urls.map(function (url) {
     url = url.replace(/\/$/, '')
     return url.indexOf('://') === -1 ? 'ws://' + url : url
   })
 
   for (var index = 0; index < urls.length; index++) {
-    var socket = new WebSocket(`${urls[index]}/${app}`)
+    var socket = new window.WebSocket(`${urls[index]}/${app}`)
 
     this.sockets.push(socket)
 

@@ -1,6 +1,8 @@
 var server = require('./server')
 var client = require('./index')
 var tape = require('tape')
+global.window = {}
+window.WebSocket = require('uws')
 
 server({port: 3002, path: 'app'}, (wss) => {
   tape('subscribe', function (t) {
