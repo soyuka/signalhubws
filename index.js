@@ -91,7 +91,7 @@ SignalhubWs.prototype.broadcast = function (channel, message, cb) {
 }
 
 SignalhubWs.prototype.onMessage = function (message) {
-  message = JSON.parse(message)
+  message = JSON.parse(message.data)
 
   for (let key of this.channels.keys()) {
     if (Array.isArray(key)) {
