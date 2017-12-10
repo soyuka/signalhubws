@@ -1,14 +1,32 @@
 var WebSocketServer = require('uws').Server
 
-function server (args, cb) {
-  var wss = new WebSocketServer(args)
+module.exports = function () {
+  var wss
 
-  wss.on('connection', function (ws) {
-    ws.on('message', (data) => {
-      wss.broadcast(data)
+  function listen (port, cb) {
+    wss = new WebSocketServer({port: port})
+
+    wss.on('connection', function (ws) {
+      ws.app = ws.upgradeReq.url.split('?')[0].split('#')[0].substring(1)
+      ws.on('message', (data) => {
+        const jsond = JSON.parse(data)
+        wss.clients.forEach((client) => {
+          if (jsond.app === client.app) {
+            client.send(data)
+          }
+        })
+      })
     })
-  })
-  cb(wss)
-}
 
-module.exports = server
+    wss.on('listening', function () {
+      cb()
+    })
+  }
+
+  return {
+    listen: listen,
+    close: () => {
+      wss.close()
+    }
+  }
+}

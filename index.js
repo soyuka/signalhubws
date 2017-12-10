@@ -3,11 +3,16 @@ const through2 = require('through2')
 const inherits = require('inherits')
 
 function SignalhubWs (app, urls) {
-  this.sockets = []
-  this.channels = new Map()
   this.opened = false
+  this.sockets = []
+  this.app = app
+  const channels = this.channels = new Map()
+  this.subscribers = {
+    get length () {
+      return channels.size
+    }
+  }
 
-  // manage URLs
   if (!Array.isArray(urls)) {
     urls = [urls]
   }
@@ -51,7 +56,7 @@ SignalhubWs.prototype.subscribe = function (channel) {
     return this.channels.get(channel)
   }
 
-  // allow stream for channel
+  // use a stream for channel
   this.channels.set(channel, through2.obj())
 
   this.channels.get(channel).on('close', function () {
@@ -70,9 +75,12 @@ SignalhubWs.prototype.subscribe = function (channel) {
 }
 
 SignalhubWs.prototype.broadcast = function (channel, message, cb) {
-  if (this.closed) throw new Error('Cannot broadcast after close')
+  if (this.closed) {
+    throw new Error('Cannot broadcast after close')
+  }
 
   const data = {
+    app: this.app,
     channel: channel,
     message: message
   }

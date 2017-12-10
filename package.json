@@ -1,8 +1,9 @@
 {
   "name": "signalhubws",
   "version": "1.0.0",
-  "description": "",
+  "description": "Drop in replacement for signalhub with websockets",
   "main": "index.js",
+  "bin": "bin.js",
   "scripts": {
     "test": "standard && tape test.js",
     "start": "node server.js"
@@ -14,7 +15,6 @@
     "events": "^1.1.1",
     "inherits": "^2.0.3",
     "minimist": "^1.2.0",
-    "signalhub": "^4.9.0",
     "tape": "^4.8.0",
     "through2": "^2.0.3",
     "uws": "^9.14.0",
