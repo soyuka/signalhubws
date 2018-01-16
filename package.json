@@ -1,6 +1,6 @@
 {
   "name": "signalhubws",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Drop in replacement for signalhub with websockets",
   "main": "index.js",
   "bin": "bin.js",
