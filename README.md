@@ -16,6 +16,6 @@ now soyuka/Signalhubws
 
 ```
 wss://soyuka.me
-wss://zeit.co/5XWCNeW5OKNKbsoz3yT8l9gg/signalhubws/hoqgmzhyce
+wss://signalhubws-bpyimaismm.now.sh
 ```
 
