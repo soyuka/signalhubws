@@ -6,7 +6,7 @@
   "bin": "bin.js",
   "scripts": {
     "test": "standard && tape test.js",
-    "start": "node server.js"
+    "start": "node bin.js"
   },
   "keywords": [],
   "author": "",

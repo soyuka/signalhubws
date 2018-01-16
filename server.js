@@ -10,7 +10,14 @@ module.exports = function () {
       var app = ws.upgradeReq.url.split('?')[0].split('#')[0].substring(1).split('/')
       ws.app = app[app.length - 1]
       ws.on('message', (data) => {
-        const jsond = JSON.parse(data)
+        var jsond
+        try {
+          jsond = JSON.parse(data)
+        } catch (e) {
+          console.error(e.message)
+          return
+        }
+
         wss.clients.forEach((client) => {
           if (jsond.app === client.app) {
             client.send(data)
