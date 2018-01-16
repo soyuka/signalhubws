@@ -1,4 +1,5 @@
 var WebSocketServer = require('uws').Server
+var debug = require('debug')('signalhubws')
 
 module.exports = function () {
   var wss
@@ -18,8 +19,11 @@ module.exports = function () {
           return
         }
 
+        debug('Got message', jsond)
+
         wss.clients.forEach((client) => {
           if (jsond.app === client.app) {
+            debug('Broadcasting on app: %s', client.app)
             client.send(data)
           }
         })
