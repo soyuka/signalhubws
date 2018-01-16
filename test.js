@@ -115,6 +115,18 @@ server.listen(9000, function () {
     })
   })
 
+  tape('subscribe to channels with slash in the url', function (t) {
+    var c = client('app', ['localhost:9000/foo'])
+
+    c.subscribe('hello/bar').on('data', function (message) {
+      t.same(message, [1, 2, 3])
+      t.end()
+      c.close()
+    }).on('open', function () {
+      c.broadcast('hello/bar', [1, 2, 3])
+    })
+  })
+
   tape('end', function (t) {
     server.close()
     t.ok(true)

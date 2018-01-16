@@ -7,7 +7,8 @@ module.exports = function () {
     wss = new WebSocketServer({port: port})
 
     wss.on('connection', function (ws) {
-      ws.app = ws.upgradeReq.url.split('?')[0].split('#')[0].substring(1)
+      var app = ws.upgradeReq.url.split('?')[0].split('#')[0].substring(1).split('/')
+      ws.app = app[app.length - 1]
       ws.on('message', (data) => {
         const jsond = JSON.parse(data)
         wss.clients.forEach((client) => {
