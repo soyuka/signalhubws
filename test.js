@@ -1,8 +1,9 @@
+global.window = {}
+window.WebSocket = require('websocket').w3cwebsocket
+
 var server = require('./server')()
 var client = require('./index')
 var tape = require('tape')
-global.window = {}
-window.WebSocket = require('websocket').w3cwebsocket
 
 server.listen(9000, function () {
   tape('subscribe', function (t) {
