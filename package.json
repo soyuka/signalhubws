@@ -5,7 +5,7 @@
   "main": "index.js",
   "bin": "bin.js",
   "scripts": {
-    "test": "standard && tape test.js",
+    "test": "standard && tape tests/**/*.test.js",
     "start": "node bin.js"
   },
   "keywords": [],
