@@ -1,4 +1,7 @@
-/* Macro test utility */
+/**
+ * This is pretty much a copy/paste from
+ * https://github.com/mafintosh/signalhub/blob/master/test.js
+ */
 module.exports = function (test, server, client, port) {
   test('subscribe', function (t) {
     var c = client('app', [`localhost:${port}`])
