@@ -9,13 +9,11 @@ See https://github.com/mafintosh/signalhub
 ## Deploy with now
 
 ```
-now soyuka/Signalhubws
+now soyuka/signalhubws
 ```
 
-## Available signahubs (WSS):
+## Available signalhubs (WSS):
 
 ```
-wss://soyuka.me
-wss://signalhubws-bpyimaismm.now.sh
+wss://soyuka.pw
 ```
-
