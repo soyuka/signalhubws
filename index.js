@@ -1,8 +1,9 @@
 const events = require('events')
 const through2 = require('through2')
 const inherits = require('inherits')
+const WebSocket = (typeof window !== 'undefined' && window.WebSocket) ? window.WebSocket : null
 
-function SignalhubWs (app, urls) {
+function SignalhubWs (app, urls, WebSocketClass) {
   this.opened = false
   this.sockets = []
   this.app = app
@@ -25,7 +26,7 @@ function SignalhubWs (app, urls) {
   let countOpen = 0
 
   for (let index = 0; index < urls.length; index++) {
-    const socket = new window.WebSocket(`${urls[index]}/${app}`)
+    const socket = new WebSocketClass(`${urls[index]}/${app}`)
 
     this.sockets.push(socket)
 
@@ -167,6 +168,9 @@ SignalhubWs.prototype._closeChannels = function (cb) {
   }
 }
 
-module.exports = function (app, urls) {
-  return new SignalhubWs(app, urls)
+module.exports = function (app, urls, WebSocketClass = WebSocket) {
+  if (!WebSocketClass) {
+    throw TypeError('No WebSocket class given.')
+  }
+  return new SignalhubWs(app, urls, WebSocketClass)
 }

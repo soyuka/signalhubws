@@ -1,11 +1,11 @@
 {
   "name": "signalhubws",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Drop in replacement for signalhub with websockets",
   "main": "index.js",
   "bin": "bin.js",
   "scripts": {
-    "test": "standard && tape test.js",
+    "test": "standard && tape tests/**/*.test.js",
     "start": "node bin.js"
   },
   "keywords": [],

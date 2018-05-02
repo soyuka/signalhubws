@@ -1,12 +1,10 @@
-var server = require('./server')()
-var client = require('./index')
-var tape = require('tape')
-global.window = {}
-window.WebSocket = require('websocket').w3cwebsocket
-
-server.listen(9000, function () {
-  tape('subscribe', function (t) {
-    var c = client('app', ['localhost:9000'])
+/**
+ * This is pretty much a copy/paste from
+ * https://github.com/mafintosh/signalhub/blob/master/test.js
+ */
+module.exports = function (test, server, client, port) {
+  test('subscribe', function (t) {
+    var c = client('app', [`localhost:${port}`])
 
     c.subscribe('hello').on('data', function (message) {
       t.same(message, {hello: 'world'})
@@ -17,11 +15,11 @@ server.listen(9000, function () {
     })
   })
 
-  tape('subscribe two apps', function (t) {
+  test('subscribe two apps', function (t) {
     t.plan(2)
 
     var missing = 2
-    var c1 = client('app1', ['localhost:9000'])
+    var c1 = client('app1', [`localhost:${port}`])
 
     c1.subscribe('hello').on('data', function (message) {
       t.same(message, {hello: 'world'})
@@ -30,7 +28,7 @@ server.listen(9000, function () {
       c1.broadcast('hello', {hello: 'world'})
     })
 
-    var c2 = client('app2', ['localhost:9000'])
+    var c2 = client('app2', [`localhost:${port}`])
 
     c2.subscribe('hello').on('data', function (message) {
       t.same(message, {hello: 'world'})
@@ -49,8 +47,8 @@ server.listen(9000, function () {
     }
   })
 
-  tape('subscribe with trailing /', function (t) {
-    var c = client('app', ['localhost:9000/'])
+  test('subscribe with trailing /', function (t) {
+    var c = client('app', [`localhost:${port}/`])
 
     c.subscribe('hello').on('data', function (message) {
       t.same(message, {hello: 'world'})
@@ -61,8 +59,8 @@ server.listen(9000, function () {
     })
   })
 
-  tape('subscribe to many', function (t) {
-    var c = client('app', ['localhost:9000'])
+  test('subscribe to many', function (t) {
+    var c = client('app', [`localhost:${port}`])
     var msgs = ['stranger', 'friend']
 
     c.subscribe(['hello', 'goodbye']).on('data', function (message) {
@@ -80,8 +78,8 @@ server.listen(9000, function () {
     })
   })
 
-  tape('close multiple', function (t) {
-    var c = client('app', ['localhost:9000'])
+  test('close multiple', function (t) {
+    var c = client('app', [`localhost:${port}`])
 
     c.subscribe(['hello', 'goodbye'])
     c.subscribe(['hi', 'bye'])
@@ -91,8 +89,8 @@ server.listen(9000, function () {
     })
   })
 
-  tape('subscribe to channels with slash in the name', function (t) {
-    var c = client('app', ['localhost:9000'])
+  test('subscribe to channels with slash in the name', function (t) {
+    var c = client('app', [`localhost:${port}`])
 
     c.subscribe('hello/people').on('data', function (message) {
       t.same(message, [1, 2, 3])
@@ -103,10 +101,10 @@ server.listen(9000, function () {
     })
   })
 
-  tape('open emitted with multiple hubs', function (t) {
+  test('open emitted with multiple hubs', function (t) {
     var c = client('app', [
-      'localhost:9000',
-      'localhost:9000'
+      `localhost:${port}`,
+      `localhost:${port}`
     ])
     c.subscribe('hello').on('open', function () {
       t.ok(true, 'got an open event')
@@ -115,8 +113,8 @@ server.listen(9000, function () {
     })
   })
 
-  tape('subscribe to channels with slash in the url', function (t) {
-    var c = client('app', ['localhost:9000/foo'])
+  test('subscribe to channels with slash in the url', function (t) {
+    var c = client('app', [`localhost:${port}/foo`])
 
     c.subscribe('hello/bar').on('data', function (message) {
       t.same(message, [1, 2, 3])
@@ -127,9 +125,9 @@ server.listen(9000, function () {
     })
   })
 
-  tape('end', function (t) {
+  test('end', function (t) {
     server.close()
     t.ok(true)
     t.end()
   })
-})
+}
