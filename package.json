@@ -16,12 +16,12 @@
     "events": "^1.1.1",
     "inherits": "^2.0.3",
     "minimist": "^1.2.0",
-    "tape": "^4.8.0",
     "through2": "^2.0.3",
-    "uws": "^9.14.0",
-    "websocket": "^1.0.25"
+    "ws": "^6.1.0"
   },
   "devDependencies": {
-    "standard": "^10.0.3"
+    "standard": "^10.0.3",
+    "tape": "^4.8.0",
+    "websocket": "^1.0.25"
   }
 }
