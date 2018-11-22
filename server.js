@@ -46,8 +46,8 @@ module.exports = function () {
 
   return {
     listen: listen,
-    close: () => {
-      wss.close()
+    close: (cb) => {
+      wss.close(cb)
     }
   }
 }
