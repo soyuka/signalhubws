@@ -22,8 +22,6 @@ wss://soyuka.pw
 
 ## API
 
-## API
-
 #### `hub = signalhubws(appName, urls, WebSocketClass)`
 
 Create a new hub client. If you have more than one hub running specify them in an array
