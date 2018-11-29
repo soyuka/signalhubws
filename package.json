@@ -12,16 +12,16 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "debug": "^3.1.0",
+    "debug": "^3.2.6",
     "events": "^1.1.1",
     "inherits": "^2.0.3",
     "minimist": "^1.2.0",
-    "through2": "^2.0.3",
-    "ws": "^6.1.0"
+    "through2": "^2.0.5",
+    "ws": "^6.1.2"
   },
   "devDependencies": {
     "standard": "^10.0.3",
-    "tape": "^4.8.0",
-    "websocket": "^1.0.25"
+    "tape": "^4.9.1",
+    "websocket": "^1.0.28"
   }
 }
