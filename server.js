@@ -1,9 +1,9 @@
-var WebSocketServer = require('@clusterws/uws').WebSocketServer
 var debug = require('debug')('signalhubws')
 
-module.exports = function () {
+module.exports = function (WebSocketClass) {
   var wss
   var clients = []
+  var WebSocketServer = WebSocketClass || require('@clusterws/cws').WebSocketServer
 
   function listen (port, cb) {
     wss = new WebSocketServer({port: port})
