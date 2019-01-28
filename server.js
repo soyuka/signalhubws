@@ -6,7 +6,7 @@ module.exports = function (WebSocketClass) {
   var WebSocketServer = WebSocketClass || require('@clusterws/cws').WebSocketServer
 
   function listen (port, cb) {
-    wss = new WebSocketServer({port: port})
+    wss = new WebSocketServer({ port: port })
 
     wss.on('connection', function (ws, req) {
       var app = req.url.split('?')[0].split('#')[0].substring(1).split('/')
