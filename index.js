@@ -60,8 +60,8 @@ SignalhubWs.prototype.subscribe = function (channel) {
   // use a stream for channel
   this.channels.set(channel, through2.obj())
 
-  this.channels.get(channel).on('close', function () {
-    this.channels.remove(channel)
+  this.channels.get(channel).on('close', () => {
+    this.channels.delete(channel)
   })
 
   if (this.opened) {
