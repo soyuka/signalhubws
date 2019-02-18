@@ -116,7 +116,7 @@ SignalhubWs.prototype.onMessage = function (message) {
 
 SignalhubWs.prototype.close = function (cb) {
   if (this.closed) {
-    if(cb) process.nextTick(cb)
+    if (cb) process.nextTick(cb)
     return
   }
 
@@ -146,7 +146,7 @@ SignalhubWs.prototype.close = function (cb) {
 
 SignalhubWs.prototype._closeChannels = function (cb) {
   if (this.closed) {
-    if(cb) process.nextTick(cb)
+    if (cb) process.nextTick(cb)
     return
   }
   this.closed = true
