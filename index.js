@@ -115,7 +115,10 @@ SignalhubWs.prototype.onMessage = function (message) {
 }
 
 SignalhubWs.prototype.close = function (cb) {
-  if (this.closed) return
+  if (this.closed) {
+    if (cb) process.nextTick(cb)
+    return
+  }
 
   this.once('close:socket', () => {
     this._closeChannels(cb)
@@ -142,7 +145,10 @@ SignalhubWs.prototype.close = function (cb) {
 }
 
 SignalhubWs.prototype._closeChannels = function (cb) {
-  if (this.closed) return
+  if (this.closed) {
+    if (cb) process.nextTick(cb)
+    return
+  }
   this.closed = true
 
   if (cb) {
