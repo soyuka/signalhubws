@@ -1,7 +1,12 @@
 const { EventEmitter } = require('events')
 const through2 = require('through2')
-const Sockette = require('sockette')
+let Sockette = require('sockette')
 const WebSocket = window.WebSocket
+
+if (Sockette.default) {
+  Sockette = Sockette.default
+}
+
 const noop = () => {}
 
 class SignalhubWs extends EventEmitter {
