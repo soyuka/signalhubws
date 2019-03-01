@@ -215,7 +215,7 @@ class SignalhubWs extends EventEmitter {
   }
 
   _checkInitializeWs (event, socket) {
-    if (!socket.ws) {
+    if (socket.ws !== event.target) {
       socket.ws = event.target
       this.emit('socket:ready', socket)
     }
