@@ -5,7 +5,8 @@
   "main": "index.js",
   "bin": "bin.js",
   "scripts": {
-    "test": "standard && tape tests/**/*.test.js",
+    "test": "tape tests/**/*.test.js",
+    "posttest": "standard",
     "start": "node bin.js"
   },
   "keywords": [],
@@ -17,12 +18,13 @@
     "events": "^3.0.0",
     "inherits": "^2.0.3",
     "minimist": "^1.2.0",
-    "tape": "^4.9.2",
+    "sockette": "^2.0.5",
     "through2": "^3.0.0",
     "websocket": "^1.0.28"
   },
   "devDependencies": {
     "standard": "^12.0.1",
+    "tape": "^4.9.2",
     "ws": "^6.1.2"
   }
 }
