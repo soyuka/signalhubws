@@ -1,8 +1,14 @@
 const { EventEmitter } = require('events')
 const through2 = require('through2')
-let Sockette = require('sockette')
-const WebSocket = window.WebSocket
 
+let WebSocket
+if (typeof window !== 'undefined' && window.WebSocket) {
+  WebSocket = window.WebSocket
+} else {
+  WebSocket = global.WebSocket = require('ws')
+}
+
+let Sockette = require('sockette')
 if (Sockette.default) {
   Sockette = Sockette.default
 }
@@ -144,16 +150,21 @@ class SignalhubWs extends EventEmitter {
   }
 
   close (cb = noop) {
+    const _close = () => {
+      this.emit('close')
+      cb()
+    }
+
     this.ready(() => {
       if (this.closed) {
-        this._closeChannels(cb)
+        this._closeChannels(_close)
         return
       }
 
       const onSocketClose = () => {
         if (this.closed) {
           this.removeListener('socket:close', onSocketClose)
-          this._closeChannels(cb)
+          this._closeChannels(_close)
         }
       }
       this.on('socket:close', onSocketClose)
