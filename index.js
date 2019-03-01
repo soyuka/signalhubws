@@ -136,7 +136,7 @@ class SignalhubWs extends EventEmitter {
       }
 
       this.sockets.forEach(socket => {
-        socket.send(JSON.stringify(data))
+        this._send(socket, JSON.stringify(data))
       })
 
       cb && cb()
@@ -215,6 +215,14 @@ class SignalhubWs extends EventEmitter {
       channel.opened = true
       channel.emit('open')
     }
+  }
+
+  _send (socket, message) {
+    if (!socket.ws || socket.ws.readyState !== WebSocket.OPEN) {
+      return
+    }
+
+    socket.send(message)
   }
 
   _closeChannels (cb) {
