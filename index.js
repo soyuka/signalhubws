@@ -60,8 +60,11 @@ class SignalhubWs extends EventEmitter {
           onerror: e => {
             this._onError(e, socket)
           },
-          onreconnect: () => {
-            console.log(`Reconnecting to: ${id}`)
+          onreconnect: e => {
+            this.emit('socket:reconnect', e, socket)
+          },
+          onmaximum: e => {
+            this.emit('socket:maximum', e, socket)
           }
         }
       ))
@@ -177,7 +180,7 @@ class SignalhubWs extends EventEmitter {
 
   _onOpen (event, socket) {
     this._checkInitializeWs(event, socket)
-    this.emit('socket:open', socket)
+    this.emit('socket:open', event, socket)
     for (let channel of this.channels.values()) {
       this._openChannel(channel)
     }
@@ -185,16 +188,16 @@ class SignalhubWs extends EventEmitter {
 
   _onClose (event, socket) {
     this._checkInitializeWs(event, socket)
-    this.emit('socket:close', socket)
+    this.emit('socket:close', event, socket)
   }
 
   _onError (event, socket) {
     this._checkInitializeWs(event, socket)
-    this.emit('socket:error', socket)
+    this.emit('socket:error', event, socket)
   }
 
-  _onMessage (message) {
-    message = JSON.parse(message.data)
+  _onMessage (event, socket) {
+    const message = JSON.parse(event.data)
 
     for (let key of this.channels.keys()) {
       if (message.channel === key) {
@@ -212,6 +215,8 @@ class SignalhubWs extends EventEmitter {
         }
       }
     }
+
+    this.emit('socket:message', event, socket)
   }
 
   _checkInitializeWs (event, socket) {
