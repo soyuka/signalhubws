@@ -1,182 +1,260 @@
-const events = require('events')
+const { EventEmitter } = require('events')
 const through2 = require('through2')
-const inherits = require('inherits')
-const WebSocket = (typeof window !== 'undefined' && window.WebSocket) ? window.WebSocket : null
 
-function SignalhubWs (app, urls, WebSocketClass) {
-  this.opened = false
-  this.sockets = []
-  this.app = app
-  const channels = this.channels = new Map()
-  this.subscribers = {
-    get length () {
-      return channels.size
-    }
-  }
-
-  if (!Array.isArray(urls)) {
-    urls = [urls]
-  }
-
-  urls = urls.map(function (url) {
-    url = url.replace(/\/$/, '')
-    return url.indexOf('://') === -1 ? 'ws://' + url : url
-  })
-
-  let countOpen = 0
-
-  for (let index = 0; index < urls.length; index++) {
-    const socket = new WebSocketClass(`${urls[index]}/${app}`)
-
-    this.sockets.push(socket)
-
-    socket.addEventListener('open', () => {
-      if (++countOpen === urls.length) {
-        this.opened = true
-        this.emit('open')
-        for (let channel of this.channels.values()) {
-          channel.emit('open')
-        }
-      }
-    })
-
-    socket.addEventListener('message', (message) => {
-      this.onMessage(message)
-    })
-  }
+let WebSocket
+if (typeof window !== 'undefined' && window.WebSocket) {
+  WebSocket = window.WebSocket
+} else {
+  WebSocket = global.WebSocket = require('ws')
 }
 
-inherits(SignalhubWs, events.EventEmitter)
+let Sockette = require('sockette')
+if (Sockette.default) {
+  Sockette = Sockette.default
+}
 
-SignalhubWs.prototype.subscribe = function (channel) {
-  if (this.closed) {
-    throw new Error('Cannot subscribe after close')
+const noop = () => {}
+
+class SignalhubWs extends EventEmitter {
+  constructor (app, urls, opts = {}) {
+    super()
+
+    this.sockets = []
+
+    this.app = app
+
+    const channels = this.channels = new Map()
+
+    this._ready = false
+
+    this.subscribers = {
+      get length () {
+        return channels.size
+      }
+    }
+
+    if (!Array.isArray(urls)) {
+      urls = [urls]
+    }
+
+    urls = urls.map(function (url) {
+      url = url.replace(/\/$/, '')
+      return url.indexOf('://') === -1 ? 'ws://' + url : url
+    })
+
+    for (let url of urls) {
+      const id = `${url}/${app}`
+
+      const socket = new Sockette(id, Object.assign({},
+        opts.sockette || {},
+        {
+          onopen: e => {
+            this._onOpen(e, socket)
+          },
+          onmessage: e => {
+            this._onMessage(e, socket)
+          },
+          onclose: e => {
+            this._onClose(e, socket)
+          },
+          onerror: e => {
+            this._onError(e, socket)
+          },
+          onreconnect: e => {
+            this.emit('socket:reconnect', e, socket)
+          },
+          onmaximum: e => {
+            this.emit('socket:maximum', e, socket)
+          }
+        }
+      ))
+
+      socket.id = id
+
+      this.sockets.push(socket)
+    }
+
+    let ready = this.sockets.length
+    this.on('socket:ready', socket => {
+      ready--
+      if (ready === 0) {
+        this._ready = true
+        this.emit('ready')
+      }
+    })
   }
 
-  if (this.channels.has(channel)) {
+  get opened () {
+    if (!this._ready) {
+      return false
+    }
+
+    return !!this.sockets.find(socket => socket.ws.readyState === WebSocket.OPEN)
+  }
+
+  get closed () {
+    if (!this._ready) {
+      return false
+    }
+
+    return this.sockets.filter(socket => socket.ws.readyState === WebSocket.CLOSED).length === this.sockets.length
+  }
+
+  ready (cb) {
+    if (this._ready) {
+      return process.nextTick(cb)
+    }
+
+    this.once('ready', cb)
+  }
+
+  subscribe (channel) {
+    if (this.channels.has(channel)) {
+      return this.channels.get(channel)
+    }
+
+    // use a stream for channel
+    const stream = through2.obj(
+      (chunk, enc, cb) => cb(null, chunk),
+      (cb) => {
+        this.channels.delete(channel)
+        this.emit('channel:close', channel)
+        cb()
+      }
+    )
+
+    this.channels.set(channel, stream)
+
+    if (this.opened) {
+      process.nextTick(() => {
+        if (this.channels.has(channel)) {
+          this._openChannel(this.channels.get(channel))
+        }
+      })
+    }
+
     return this.channels.get(channel)
   }
 
-  // use a stream for channel
-  this.channels.set(channel, through2.obj())
-
-  this.channels.get(channel).on('close', () => {
-    this.channels.delete(channel)
-  })
-
-  if (this.opened) {
-    process.nextTick(() => {
-      if (this.channels.has(channel)) {
-        this.channels.get(channel).emit('open')
+  broadcast (channel, message, cb) {
+    this.ready(() => {
+      const data = {
+        app: this.app,
+        channel: channel,
+        message: message
       }
+
+      this.sockets.forEach(socket => {
+        this._send(socket, JSON.stringify(data))
+      })
+
+      cb && cb()
     })
   }
 
-  return this.channels.get(channel)
-}
-
-SignalhubWs.prototype.broadcast = function (channel, message, cb) {
-  if (this.closed) {
-    throw new Error('Cannot broadcast after close')
-  }
-
-  const data = {
-    app: this.app,
-    channel: channel,
-    message: message
-  }
-
-  this.sockets.forEach((socket) => {
-    socket.send(JSON.stringify(data))
-  })
-
-  cb && cb()
-}
-
-SignalhubWs.prototype.onMessage = function (message) {
-  message = JSON.parse(message.data)
-
-  for (let key of this.channels.keys()) {
-    if (message.channel === key) {
-      this.channels.get(key).write(message.message)
-      continue
+  close (cb = noop) {
+    const _close = () => {
+      this.emit('close')
+      cb()
     }
 
-    if (!Array.isArray(key)) {
-      continue
-    }
-
-    for (let i = 0; i < key.length; i++) {
-      if (key[i] === message.channel) {
-        this.channels.get(key).write(message.message)
+    this.ready(() => {
+      if (this.closed) {
+        this._closeChannels(_close)
+        return
       }
-    }
-  }
-}
 
-SignalhubWs.prototype.close = function (cb) {
-  if (this.closed) {
-    if (cb) process.nextTick(cb)
-    return
-  }
-
-  this.once('close:socket', () => {
-    this._closeChannels(cb)
-  })
-
-  const len = this.sockets.length
-  if (len === 0) {
-    this.emit('close')
-    return
-  }
-
-  let closed = 0
-  this.sockets.forEach((socket) => {
-    socket.addEventListener('close', () => {
-      if (++closed === len) {
-        this.emit('close:socket')
-      }
-    })
-
-    process.nextTick(function () {
-      socket.close()
-    })
-  })
-}
-
-SignalhubWs.prototype._closeChannels = function (cb) {
-  if (this.closed) {
-    if (cb) process.nextTick(cb)
-    return
-  }
-  this.closed = true
-
-  if (cb) {
-    this.on('close', cb)
-  }
-
-  const len = this.channels.size
-  if (len === 0) {
-    this.emit('close')
-    return
-  }
-
-  let closed = 0
-  for (let channel of this.channels.values()) {
-    process.nextTick(() => {
-      channel.end(() => {
-        if (++closed === len) {
-          this.channels.clear()
-          this.emit('close')
+      const onSocketClose = () => {
+        if (this.closed) {
+          this.removeListener('socket:close', onSocketClose)
+          this._closeChannels(_close)
         }
+      }
+      this.on('socket:close', onSocketClose)
+
+      this.sockets.forEach(socket => {
+        process.nextTick(() => socket.close())
       })
     })
   }
+
+  _onOpen (event, socket) {
+    this._checkInitializeWs(event, socket)
+    this.emit('socket:open', event, socket)
+    for (let channel of this.channels.values()) {
+      this._openChannel(channel)
+    }
+  }
+
+  _onClose (event, socket) {
+    this._checkInitializeWs(event, socket)
+    this.emit('socket:close', event, socket)
+  }
+
+  _onError (event, socket) {
+    this._checkInitializeWs(event, socket)
+    this.emit('socket:error', event, socket)
+  }
+
+  _onMessage (event, socket) {
+    const message = JSON.parse(event.data)
+
+    for (let key of this.channels.keys()) {
+      if (message.channel === key) {
+        this.channels.get(key).write(message.message)
+        continue
+      }
+
+      if (!Array.isArray(key)) {
+        continue
+      }
+
+      for (let i = 0; i < key.length; i++) {
+        if (key[i] === message.channel) {
+          this.channels.get(key).write(message.message)
+        }
+      }
+    }
+
+    this.emit('socket:message', event, socket)
+  }
+
+  _checkInitializeWs (event, socket) {
+    if (socket.ws !== event.target) {
+      socket.ws = event.target
+      this.emit('socket:ready', socket)
+    }
+  }
+
+  _openChannel (channel) {
+    if (!channel.opened) {
+      channel.opened = true
+      channel.emit('open')
+    }
+  }
+
+  _send (socket, message) {
+    if (!socket.ws || socket.ws.readyState !== WebSocket.OPEN) {
+      return
+    }
+
+    socket.send(message)
+  }
+
+  _closeChannels (cb) {
+    const onChannelClose = () => {
+      if (this.channels.size === 0) {
+        this.removeListener('channel:close', onChannelClose)
+        cb()
+      }
+    }
+
+    this.on('channel:close', onChannelClose)
+
+    for (let channel of this.channels.values()) {
+      process.nextTick(() => channel.end())
+    }
+  }
 }
 
-module.exports = function (app, urls, WebSocketClass = WebSocket) {
-  if (!WebSocketClass) {
-    throw TypeError('No WebSocket class given.')
-  }
-  return new SignalhubWs(app, urls, WebSocketClass)
-}
+module.exports = (...args) => new SignalhubWs(...args)

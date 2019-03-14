@@ -1,5 +1,3 @@
-global.window = {}
-window.WebSocket = require('websocket').w3cwebsocket
 var test = require('tape')
 var macro = require('./boilerplate')
 var server = require('../server')()

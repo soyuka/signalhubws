@@ -39,11 +39,9 @@ module.exports = function (test, server, client, port) {
 
     function done () {
       if (--missing) return
-      setTimeout(function () {
-        c1.close()
-        c2.close()
-        t.end()
-      }, 100)
+      c1.close()
+      c2.close()
+      t.end()
     }
   })
 
@@ -106,10 +104,12 @@ module.exports = function (test, server, client, port) {
       `localhost:${port}`,
       `localhost:${port}`
     ])
+
     c.subscribe('hello').on('open', function () {
       t.ok(true, 'got an open event')
-      c.close()
-      t.end()
+      c.close(() => {
+        t.end()
+      })
     })
   })
 

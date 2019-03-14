@@ -14,6 +14,9 @@ See https://github.com/mafintosh/signalhub
 now soyuka/signalhubws
 ```
 
+## Deploy with Heroku
+[![Deploy](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy)
+
 ## Available signalhubs (WSS):
 
 ```
