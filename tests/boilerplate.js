@@ -125,6 +125,20 @@ module.exports = function (test, server, client, port) {
     })
   })
 
+  test('invalid url', function (t) {
+    t.timeoutAfter(5000)
+    try {
+      const invalidUrl = 'ws://invalid_url'
+      const c = client('app', [invalidUrl])
+      c.on('error', (e) => {
+        t.same(e.url, invalidUrl)
+        t.end()
+      })
+    } catch (e) {
+      t.fail()
+    }
+  })
+
   test('end', function (t) {
     server.close()
     t.ok(true)

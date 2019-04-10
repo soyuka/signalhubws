@@ -43,6 +43,15 @@ function SignalhubWs (app, urls, WebSocketClass) {
     socket.addEventListener('message', (message) => {
       this.onMessage(message)
     })
+
+    socket.addEventListener('error', (event) => {
+      if (this.listeners('error').length > 0) {
+        this.emit('error', { event, url: urls[index] })
+      } else {
+        // no event handler, console.error instead of uncaught exception
+        console.error(event)
+      }
+    })
   }
 }
 
