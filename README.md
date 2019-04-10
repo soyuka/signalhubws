@@ -14,11 +14,6 @@ See https://github.com/mafintosh/signalhub
 now soyuka/signalhubws
 ```
 
-## Available signalhubs (WSS):
-
-```
-wss://soyuka.pw
-```
 
 ## API
 
