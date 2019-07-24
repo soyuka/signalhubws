@@ -8,10 +8,15 @@ Note: Binary is just launching server (similar to `signalhub listen -p $PORT`)
 
 See https://github.com/mafintosh/signalhub
 
-## Deploy with now
+## Deploy with Heroku
 
+[![Deploy](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy)
+	
+Or via the CLI:
 ```
-now soyuka/signalhubws
+heroku login
+heroku git:remote -a <your-app-name>
+git push heroku master
 ```
 
 
