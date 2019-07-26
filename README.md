@@ -12,7 +12,7 @@ See https://github.com/mafintosh/signalhub
 
 [![Deploy](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy)
 	
-Or via the CLI:
+Or via the CLI (after cloning this repo, from within the project root):
 ```
 heroku login
 heroku git:remote -a <your-app-name>
