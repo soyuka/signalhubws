@@ -129,8 +129,9 @@ SignalhubWs.prototype.close = function (cb) {
     return
   }
 
-  this.once('close:socket', () => {
-    this._closeChannels(cb)
+  this.once('close', () => {
+    if (cb) cb()
+    this.closed = true
   })
 
   const len = this.sockets.length
@@ -138,6 +139,10 @@ SignalhubWs.prototype.close = function (cb) {
     this.emit('close')
     return
   }
+
+  this.once('close:socket', () => {
+    this._closeChannels()
+  })
 
   let closed = 0
   this.sockets.forEach((socket) => {
@@ -153,17 +158,7 @@ SignalhubWs.prototype.close = function (cb) {
   })
 }
 
-SignalhubWs.prototype._closeChannels = function (cb) {
-  if (this.closed) {
-    if (cb) process.nextTick(cb)
-    return
-  }
-  this.closed = true
-
-  if (cb) {
-    this.on('close', cb)
-  }
-
+SignalhubWs.prototype._closeChannels = function () {
   const len = this.channels.size
   if (len === 0) {
     this.emit('close')

@@ -139,6 +139,17 @@ module.exports = function (test, server, client, port) {
     }
   })
 
+  test('empty url list', function (t) {
+    t.timeoutAfter(5000)
+    try {
+      client('app', [])
+      t.fail()
+    } catch (e) {
+      t.ok(true)
+      t.end()
+    }
+  })
+
   test('end', function (t) {
     server.close()
     t.ok(true)
