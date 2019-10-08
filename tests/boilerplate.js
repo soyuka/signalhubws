@@ -139,13 +139,24 @@ module.exports = function (test, server, client, port) {
     }
   })
 
+  test('undefined url', function (t) {
+    t.timeoutAfter(5000)
+    try {
+      client('app')
+      t.fail()
+    } catch (e) {
+      t.same(e.message, 'No URL specified')
+      t.end()
+    }
+  })
+
   test('empty url list', function (t) {
     t.timeoutAfter(5000)
     try {
       client('app', [])
       t.fail()
     } catch (e) {
-      t.ok(true)
+      t.same(e.message, 'No URL specified')
       t.end()
     }
   })

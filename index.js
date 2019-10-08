@@ -14,6 +14,10 @@ function SignalhubWs (app, urls, WebSocketClass) {
     }
   }
 
+  if (!urls || (Array.isArray(urls) && urls.length === 0)) {
+    throw Error('No URL specified')
+  }
+
   if (!Array.isArray(urls)) {
     urls = [urls]
   }
