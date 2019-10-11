@@ -14,6 +14,10 @@ function SignalhubWs (app, urls, WebSocketClass) {
     }
   }
 
+  if (!urls || (Array.isArray(urls) && urls.length === 0)) {
+    throw Error('No URL specified')
+  }
+
   if (!Array.isArray(urls)) {
     urls = [urls]
   }
@@ -42,6 +46,15 @@ function SignalhubWs (app, urls, WebSocketClass) {
 
     socket.addEventListener('message', (message) => {
       this.onMessage(message)
+    })
+
+    socket.addEventListener('error', (event) => {
+      if (this.listeners('error').length > 0) {
+        this.emit('error', { event, url: urls[index] })
+      } else {
+        // no event handler, console.error instead of uncaught exception
+        console.error(event)
+      }
     })
   }
 }
@@ -120,8 +133,9 @@ SignalhubWs.prototype.close = function (cb) {
     return
   }
 
-  this.once('close:socket', () => {
-    this._closeChannels(cb)
+  this.once('close', () => {
+    if (cb) cb()
+    this.closed = true
   })
 
   const len = this.sockets.length
@@ -129,6 +143,10 @@ SignalhubWs.prototype.close = function (cb) {
     this.emit('close')
     return
   }
+
+  this.once('close:socket', () => {
+    this._closeChannels()
+  })
 
   let closed = 0
   this.sockets.forEach((socket) => {
@@ -144,17 +162,7 @@ SignalhubWs.prototype.close = function (cb) {
   })
 }
 
-SignalhubWs.prototype._closeChannels = function (cb) {
-  if (this.closed) {
-    if (cb) process.nextTick(cb)
-    return
-  }
-  this.closed = true
-
-  if (cb) {
-    this.on('close', cb)
-  }
-
+SignalhubWs.prototype._closeChannels = function () {
   const len = this.channels.size
   if (len === 0) {
     this.emit('close')
