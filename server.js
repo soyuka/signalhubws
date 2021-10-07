@@ -1,18 +1,12 @@
-/* Simple pub/sub broadcasting example */
-
 const uWS = require('uWebSockets.js')
 const debug = require('debug')('signalhubws')
 
-module.exports = function (ServerClass) {
+module.exports = function (ssl, ServerClass) {
   var app
-  var Server = ServerClass || uWS.SSLApp
+  var Server = ServerClass || (ssl ? uWS.SSLApp : uWS.App)
 
   function listen (port, cb) {
-    app = new Server({
-      key_file_name: 'certificate-authority/certs/server-1-key.pem',
-      cert_file_name: 'certificate-authority/certs/server-1-crt.pem',
-      passphrase: ''
-    }).ws('/*', {
+    app = new Server(ssl || {}).ws('/*', {
       /* Server Options */
       compression: uWS.SHARED_COMPRESSOR,
       maxPayloadLength: 16 * 1024 * 1024,
