@@ -19,7 +19,7 @@ const port = process.env.PORT || argv.port || argv.p || 3300,
 
 var server = require('./server')(ssl)
 
-server.listen(port, () => {
+server.listen(+port, () => {
   console.log('Signalhubws running on %s', port)
 })
 
