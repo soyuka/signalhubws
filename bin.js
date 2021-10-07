@@ -8,7 +8,7 @@ if (argv.help || argv.h) {
   process.exit(1)
 }
 
-const port = process.env.PORT || argv.port || argv.p || 3300,
+const port = argv.port || argv.p || process.env.PORT || 3300,
       ssl = fs.existsSync('certs') ?
         {
           key_file_name: 'certs/key.pem',
@@ -16,6 +16,11 @@ const port = process.env.PORT || argv.port || argv.p || 3300,
           passphrase: ''
         }
         : null
+
+if (!+port){
+  console.error('Signalhubws: invalid port %s', port);
+  process.exit(1);
+}
 
 var server = require('./server')(ssl)
 
