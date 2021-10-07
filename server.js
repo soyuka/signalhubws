@@ -1,53 +1,60 @@
-var debug = require('debug')('signalhubws')
+/* Simple pub/sub broadcasting example */
 
-module.exports = function (WebSocketClass) {
-  var wss
-  var clients = []
-  var WebSocketServer = WebSocketClass || require('@clusterws/cws').WebSocketServer
+const uWS = require('uWebSockets.js')
+const debug = require('debug')('signalhubws')
+
+module.exports = function (ServerClass) {
+  var app
+  var Server = ServerClass || uWS.SSLApp
 
   function listen (port, cb) {
-    wss = new WebSocketServer({ port: port })
+    app = new Server({
+      key_file_name: 'certificate-authority/certs/server-1-key.pem',
+      cert_file_name: 'certificate-authority/certs/server-1-crt.pem',
+      passphrase: ''
+    }).ws('/*', {
+      /* Server Options */
+      compression: uWS.SHARED_COMPRESSOR,
+      maxPayloadLength: 16 * 1024 * 1024,
+      idleTimeout: 120,
 
-    wss.on('connection', function (ws, req) {
-      var app = req.url.split('?')[0].split('#')[0].substring(1).split('/')
-      ws.app = app[app.length - 1]
+      /** WebSocket connection handler */
+      upgrade (res, req, context) {
+        var url = req.getUrl()
+        debug('Accepting connection', url)
 
-      clients.push(ws)
+        // need to set `app` in ws when upgrading
+        var app = url.split('?')[0].split('#')[0].split('/')
+        res.upgrade({ app: app[app.length - 1] },
+          req.getHeader('sec-websocket-key'),
+          req.getHeader('sec-websocket-protocol'),
+          req.getHeader('sec-websocket-extensions'),
+          context)
+      },
 
-      ws.on('close', () => {
-        const i = clients.findIndex(c => c === ws)
-        clients.splice(i, 1)
-      })
+      open (ws) {
+        ws.subscribe(ws.app)
+      },
 
-      ws.on('message', (data) => {
-        var jsond
-        try {
-          jsond = JSON.parse(data)
-        } catch (e) {
-          console.error(e.message)
-          return
-        }
+      message (ws, message, isBinary) {
+        try { var jsond = JSON.parse(Buffer.from(message)) } catch (e) { console.error('malformed message;', e.message); return }
 
         debug('Got message', jsond)
 
-        clients.forEach((client) => {
-          if (jsond.app === client.app) {
-            debug('Broadcasting on app: %s', client.app)
-            client.send(data)
-          }
-        })
-      })
-    })
+        ws.publish(ws.app, message, isBinary)
+      },
 
-    wss.on('listening', function () {
-      cb()
+      drain: (ws) => { },
+      close: (ws, code, message) => { }
+    }).any('/*', (res, req) => {
+      res.end('Signalhubws server')
+    }).listen(port, (token) => {
+      if (token) cb()
+      else { console.error('Failed to listen to port ' + port) }
     })
   }
 
-  return {
-    listen: listen,
-    close: (cb) => {
-      wss.close(cb)
-    }
-  }
+  return { listen, close: (cb) => app.close(cb) }
 }
+
+// listen(port, console.log);

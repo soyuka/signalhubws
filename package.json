@@ -12,12 +12,12 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@clusterws/cws": "^0.15.0",
     "debug": "^4.1.1",
     "events": "^3.0.0",
     "inherits": "^2.0.3",
     "minimist": "^1.2.0",
-    "through2": "^3.0.0"
+    "through2": "^3.0.0",
+    "uWebSockets.js": "uNetworking/uWebSockets.js#v19.3.0"
   },
   "devDependencies": {
     "standardx": "^7.0.0",
