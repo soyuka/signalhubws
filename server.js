@@ -50,5 +50,3 @@ module.exports = function (ssl, ServerClass) {
 
   return { listen, close: (cb) => app.close(cb) }
 }
-
-// listen(port, console.log);
