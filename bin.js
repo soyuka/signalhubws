@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-var fs = require('fs');
+var fs = require('fs')
 var argv = require('minimist')(process.argv.slice(2))
 
 if (argv.help || argv.h) {
@@ -8,18 +8,18 @@ if (argv.help || argv.h) {
   process.exit(1)
 }
 
-const port = argv.port || argv.p || process.env.PORT || 3300,
-      ssl = fs.existsSync('certs') ?
-        {
-          key_file_name: 'certs/key.pem',
-          cert_file_name: 'certs/cert.pem',
-          passphrase: ''
-        }
-        : null
+const port = argv.port || argv.p || process.env.PORT || 3300
+const ssl = fs.existsSync('certs')
+  ? {
+      key_file_name: 'certs/key.pem',
+      cert_file_name: 'certs/cert.pem',
+      passphrase: ''
+    }
+  : null
 
-if (!+port){
-  console.error('Signalhubws: invalid port %s', port);
-  process.exit(1);
+if (!+port) {
+  console.error('Signalhubws: invalid port %s', port)
+  process.exit(1)
 }
 
 var server = require('./server')(ssl)
