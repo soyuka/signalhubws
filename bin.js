@@ -23,7 +23,7 @@ if (!port) {
   process.exit(1)
 }
 
-var server = require('./server')(ssl)
+var server = require('./server')(null, ssl)
 
 server.listen(port, () => {
   console.log('Signalhubws running on %s', port)
