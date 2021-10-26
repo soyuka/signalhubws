@@ -1,7 +1,9 @@
 const uWS = require('uWebSockets.js')
 const debug = require('debug')('signalhubws')
 
-module.exports = function (ssl, ServerClass) {
+module.exports = function (WebSocketClass, ssl) {
+
+ssl = ssl === undefined ? false : ssl
   var app
   var Server = ServerClass || (ssl ? uWS.SSLApp : uWS.App)
 
