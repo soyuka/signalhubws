@@ -2,6 +2,8 @@
 # uwsgi --http-socket :3300 --http-websocket --wsgi-file signalhubws.py --gevent 100
 
 import os
+import json
+import re
 from contextlib import contextmanager
 from collections import defaultdict
 import uwsgi
@@ -66,9 +68,53 @@ class Channel:
 class Server:
     def __init__(self):
         self.channels = defaultdict(Channel)
+        self.motd = None
+
+    def handle_http(self, env, start_response):
+        start_response('200 OK', [('Content-Type', 'text/plain; charset=utf-8')])
+
+        if env['PATH_INFO'] == '/turn-phone-home':
+            print(f"[{env['REMOTE_ADDR']}] Received TURN call-home request")
+            self.set_as_turn(env['REMOTE_ADDR'])
+
+        ident = f"Signalhubws Server ({env['SERVER_NAME']}) → {env['REMOTE_ADDR']}"
+        summary = self.summary()
+        summary = f"{summary['clients']} connected in {summary['channels']} channels"
+        motd = json.dumps(self.motd) if self.motd else ''
+
+        return f"{ident}\n\n {summary}\n\n{motd}".encode('utf-8')
 
     def channel_for(self, url):
-        return self.channels[url]
+        return self.channels[self.channel_name_for(url)]
+
+    def channel_name_for(self, url):
+        return re.sub('^/', '', url)
+
+    def wrap_message(self, message, channel):
+        # there seems to be a slight mixup between `app` and `channel` in Signalhub
+        return {'app': channel, 'channel': '*', 'message': message}
+
+    def format_motd(self, channel):
+        return self.encode_json(self.wrap_message({'motd': self.motd}, channel))
+
+    def encode_json(self, data):
+        return json.dumps(data).encode('utf-8')
+
+    def summary(self):
+        total_connections = sum(len(c.connections) for c in self.channels)
+        return {'channels': len(self.channels), 'clients': total_connections}
+
+    def set_as_turn(self, client_addr):
+        """
+        Used to configure `motd` with details of a STUN/TURN server.
+        """
+        if self.motd is None: self.motd = {}
+        # these are hard-coded for now
+        self.motd['ice'] = {
+            'urls': [f'turn:{client_addr}:3478'],
+            'username': 'power',
+            'credential': 'to-the-people'
+        }
 
 
 server = Server()
@@ -82,8 +128,12 @@ def application(env, start_response):
     if 'HTTP_SEC_WEBSOCKET_KEY' in env:
         uwsgi.websocket_handshake(env['HTTP_SEC_WEBSOCKET_KEY'], env.get('HTTP_ORIGIN', ''))
 
+        channel_name = server.channel_name_for(env['PATH_INFO'])
+
+        if server.motd: uwsgi.websocket_send(server.format_motd(channel_name))
+
         websocket_fd = uwsgi.connection_fd()
-        channel = server.channel_for(env['PATH_INFO'])
+        channel = server.channels[channel_name]
 
         with channel.managed_register(websocket_fd) as wire:
 
@@ -99,3 +149,5 @@ def application(env, start_response):
                     elif fd == wire.ready_fd:
                         uwsgi.websocket_send(wire.dequeue())
 
+    else:
+        return server.handle_http(env, start_response)
