@@ -20,6 +20,10 @@ class Pipe:
     def read(self, nbytes):
         return os.read(self.fd_rd, nbytes)
 
+    def close(self):
+        os.close(self.fd_rd)
+        os.close(self.fd_wr)
+
 
 class Wire:
     def __init__(self):
@@ -39,6 +43,9 @@ class Wire:
         m, self.queue = self.queue[0], self.queue[1:]
         return m
 
+    def close(self):
+        self.pipe.close()
+
 
 class Channel:
     def __init__(self):
@@ -50,6 +57,7 @@ class Channel:
         return wire
 
     def unregister(self, key):
+        self.connections[key].close()
         del self.connections[key]
 
     def broadcast(self, msg):
@@ -134,20 +142,29 @@ def application(env, start_response):
 
         websocket_fd = uwsgi.connection_fd()
         channel = server.channels[channel_name]
+        quit = False
+
+        print(f"[info] client connected (fd={websocket_fd}, channel={channel_name})")
 
         with channel.managed_register(websocket_fd) as wire:
 
-            while True:
+            while not quit:
                 ready = gevent.select.select([websocket_fd, wire.ready_fd], [], [], 4.0)
                 if not ready[0]:
                     uwsgi.websocket_recv_nb()
                 for fd in ready[0]:
                     if fd == websocket_fd:
-                        msg = uwsgi.websocket_recv_nb()
+                        try:
+                            msg = uwsgi.websocket_recv_nb()
+                        except:
+                            quit = True; break
                         if msg:
                             channel.broadcast(msg)
                     elif fd == wire.ready_fd:
                         uwsgi.websocket_send(wire.dequeue())
+
+        print(f"[info] client disconnected (fd={websocket_fd}, channel={channel_name})")
+        return ""
 
     else:
         return server.handle_http(env, start_response)
