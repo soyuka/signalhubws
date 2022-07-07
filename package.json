@@ -1,28 +1,34 @@
 {
   "name": "signalhubws",
-  "version": "1.0.12",
-  "description": "Drop in replacement for signalhub with websockets",
+  "version": "1.1.0",
+  "description": "Drop-in replacement for signalhub with websockets",
   "main": "index.js",
   "bin": "bin.js",
   "scripts": {
-    "test": "standard && tape tests/**/*.test.js",
+    "test": "standardx && tape tests/**/*.test.js",
     "start": "node bin.js"
   },
   "keywords": [],
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@clusterws/cws": "^0.15.2",
     "debug": "^4.1.1",
     "events": "^3.0.0",
     "inherits": "^2.0.3",
-    "minimist": "^1.2.0",
-    "through2": "^3.0.0"
+    "minimist": "^1.2.6",
+    "through2": "^3.0.0",
+    "uWebSockets.js": "github:uNetworking/uWebSockets.js#v20.10.0"
   },
   "devDependencies": {
-    "standard": "^12.0.1",
+    "standardx": "^7.0.0",
     "tape": "^4.9.2",
-    "ws": "^6.1.2",
-    "websocket": "^1.0.28"
+    "websocket": "^1.0.28",
+    "ws": "^6.2.2"
+  },
+  "eslintConfig": {
+    "rules": {
+      "no-var": "off",
+      "prefer-const": "off"
+    }
   }
 }
